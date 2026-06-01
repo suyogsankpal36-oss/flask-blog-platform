@@ -6,13 +6,12 @@ import os
 app = Flask(__name__)
 app.secret_key = "secretkey"
 
-# Database Path
+# Database Configuration
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(BASE_DIR, "blog.db")
+database_path = os.path.join(BASE_DIR, "blog.db")
 
-# Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{database_path}"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
@@ -26,32 +25,31 @@ class Post(db.Model):
 
 
 # Home Page
-@app.route('/')
+@app.route("/")
 def home():
     posts = Post.query.order_by(Post.created_at.desc()).all()
-    return render_template('index.html', posts=posts)
+    return render_template("index.html", posts=posts)
 
 
 # Single Post Page
-@app.route('/post/<int:id>')
+@app.route("/post/<int:id>")
 def post(id):
     post = Post.query.get_or_404(id)
-    return render_template('post.html', post=post)
+    return render_template("post.html", post=post)
 
 
 # Create Post
-@app.route('/create', methods=['GET', 'POST'])
+@app.route("/create", methods=["GET", "POST"])
 def create_post():
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        title = request.form.get('title')
-        content = request.form.get('content')
+        title = request.form.get("title")
+        content = request.form.get("content")
 
-        # Validation
         if not title or not content:
-            flash("Title and Content are required!")
-            return redirect(url_for('create_post'))
+            flash("Title and content required!")
+            return redirect(url_for("create_post"))
 
         new_post = Post(
             title=title,
@@ -61,40 +59,40 @@ def create_post():
         db.session.add(new_post)
         db.session.commit()
 
-        flash("Post Created Successfully!")
-        return redirect(url_for('home'))
+        flash("Post created successfully!")
+        return redirect(url_for("home"))
 
-    return render_template('create.html')
+    return render_template("create.html")
 
 
 # Edit Post
-@app.route('/edit/<int:id>', methods=['GET', 'POST'])
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit_post(id):
 
     post = Post.query.get_or_404(id)
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        title = request.form.get('title')
-        content = request.form.get('content')
+        title = request.form.get("title")
+        content = request.form.get("content")
 
         if not title or not content:
             flash("Fields cannot be empty!")
-            return redirect(url_for('edit_post', id=id))
+            return redirect(url_for("edit_post", id=id))
 
         post.title = title
         post.content = content
 
         db.session.commit()
 
-        flash("Post Updated Successfully!")
-        return redirect(url_for('home'))
+        flash("Post updated successfully!")
+        return redirect(url_for("home"))
 
-    return render_template('edit.html', post=post)
+    return render_template("edit.html", post=post)
 
 
 # Delete Post
-@app.route('/delete/<int:id>')
+@app.route("/delete/<int:id>")
 def delete_post(id):
 
     post = Post.query.get_or_404(id)
@@ -102,17 +100,16 @@ def delete_post(id):
     db.session.delete(post)
     db.session.commit()
 
-    flash("Post Deleted Successfully!")
+    flash("Post deleted successfully!")
+    return redirect(url_for("home"))
 
-    return redirect(url_for('home'))
 
-
-# Create Database
+# IMPORTANT FOR VERCEL
 with app.app_context():
     db.create_all()
 
 
-# Vercel needs this
+# Export app
 app = app
 
 
