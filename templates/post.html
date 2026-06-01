@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card">
+
+    <h1>{{ post.title }}</h1>
+
+    <p>
+        {{ post.content }}
+    </p>
+
+    <small>
+        Published:
+        {{ post.created_at.strftime('%d %b %Y') }}
+    </small>
+
+</div>
+
+{% endblock %}
