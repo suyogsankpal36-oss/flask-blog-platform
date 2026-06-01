@@ -1,15 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 app.secret_key = "secretkey"
 
+# Database Path
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(BASE_DIR, "blog.db")
+
 # Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
 
 # Database Model
 class Post(db.Model):
@@ -39,8 +45,8 @@ def create_post():
 
     if request.method == 'POST':
 
-        title = request.form['title']
-        content = request.form['content']
+        title = request.form.get('title')
+        content = request.form.get('content')
 
         # Validation
         if not title or not content:
@@ -69,12 +75,15 @@ def edit_post(id):
 
     if request.method == 'POST':
 
-        post.title = request.form['title']
-        post.content = request.form['content']
+        title = request.form.get('title')
+        content = request.form.get('content')
 
-        if not post.title or not post.content:
+        if not title or not content:
             flash("Fields cannot be empty!")
             return redirect(url_for('edit_post', id=id))
+
+        post.title = title
+        post.content = content
 
         db.session.commit()
 
@@ -94,6 +103,7 @@ def delete_post(id):
     db.session.commit()
 
     flash("Post Deleted Successfully!")
+
     return redirect(url_for('home'))
 
 
@@ -102,5 +112,9 @@ with app.app_context():
     db.create_all()
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Vercel needs this
+app = app
+
+
+if __name__ == "__main__":
+    app.run()
